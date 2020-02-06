@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 import itertools
+import io
 
 def read_trajectory(filename, frames_to_read=None):
 	"""
@@ -34,8 +36,14 @@ def read_trajectory(filename, frames_to_read=None):
 			elif "ITEM: ATOMS " in line:
 				l_split = line.split()
 				parcoords = l_split[2:]
+
+				strio = io.StringIO()
 				lines = itertools.islice(fh, n_atoms)
-				dat = np.genfromtxt(lines)
+				for line in lines:
+					strio.write(line)
+				strio.seek(0)
+				dat = pd.read_csv(strio, delimiter=' ', header=None).values[:,:-1]
+
 				data.append(
 					xr.DataArray(dat, dims=('particles', 'params'), coords={'params': parcoords, 'time': time})
 				)
