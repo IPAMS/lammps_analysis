@@ -9,7 +9,6 @@ import ipyvolume.pylab as p3
 import lammps_analysis.analysis as la
 
 
-
 def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='c_ke_all'):
 	"""
 	Plots a histogram of the energy distribution in a given trajectory frame.
@@ -24,7 +23,6 @@ def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='
 	:type col_name_pe: str
 	:param col_name_ke: data column name for the kinetic energy
 	:type col_name_ke: str
-	:return:
 	"""
 	pe = frame.loc[:, col_name_pe]
 	ke = frame.loc[:, col_name_ke]
@@ -153,7 +151,7 @@ def plot_radial_density(trajectories, bins=50, selected_frames='all'):
 
 ## 3d visualization:
 
-def scatter_animation(trajectory ,color_param='c_ke_all'):
+def scatter_animation(trajectory, color_param='c_ke_all'):
 	"""
 	Creates an animated three dimensional scatter plot (with ipyvolume)
 
