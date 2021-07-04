@@ -1,12 +1,16 @@
 import unittest
-import lammps_analysis.trajectory as ltra
+import LammpsAnalysis.trajectory as ltra
+import os
 
 
 class Test_trajectory(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(cls):
-		cls.trajectory = ltra.read_trajectory('test_trajectory_short.lammpstrj')
+		data_base_path = os.path.join('test', 'testfiles')
+		test_trajectory_path = os.path.join(data_base_path, 'trajectories', 'test_trajectory_short.lammpstrj')
+
+		cls.trajectory = ltra.read_trajectory(test_trajectory_path)
 
 	def test_trajectory_import(self):
 		self.assertEqual(self.trajectory.sizes['time'], int(4))

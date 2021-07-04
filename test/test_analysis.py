@@ -1,14 +1,18 @@
 import unittest
-import lammps_analysis.trajectory as ltra
-import lammps_analysis.analysis as lana
+import LammpsAnalysis.trajectory as ltra
+import LammpsAnalysis.analysis as lana
 import numpy as np
+import os
 
 
 class Test_analysis(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(cls):
-		cls.trajectory = ltra.read_trajectory('test_trajectory_short.lammpstrj')
+		data_base_path = os.path.join('test', 'testfiles')
+		test_trajectory_path = os.path.join(data_base_path, 'trajectories', 'test_trajectory_short.lammpstrj')
+
+		cls.trajectory = ltra.read_trajectory(test_trajectory_path)
 		cls.trajectory_water = ltra.filter_species_trajectory(cls.trajectory, [2, 3])
 		n_particles = 5
 		cls.test_frame = cls.trajectory_water[0].loc[:n_particles,:].copy(deep=True)

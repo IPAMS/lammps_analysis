@@ -16,4 +16,4 @@ from .log import *
 from . import visualization
 from .visualization import *
 
-__all__ = ['trajectory','analysis','log','visualization']
+__all__ = ['trajectory', 'analysis', 'log', 'visualization']

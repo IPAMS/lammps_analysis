@@ -6,7 +6,7 @@ import xarray as xr
 from matplotlib import cm
 import ipyvolume.pylab as p3
 
-import lammps_analysis.analysis as la
+import LammpsAnalysis.analysis as la
 
 
 def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='c_ke_all'):
