@@ -7,15 +7,15 @@ import numpy as np
 
 def filter_radius(trajectory, radius):
 	"""
-	Filters out a trajectory in a sphere around the geometric center of the particles.
-	The trajectory is returned as a list of single frames because the number of particles in the
+	Filters out a uncompressed_trajectory in a sphere around the geometric center of the particles.
+	The uncompressed_trajectory is returned as a list of single frames because the number of particles in the
 	selected sphere can change over time
 
-	:param trajectory: An input trajectory
-	:type trajectory: xarray with a read trajectory
+	:param trajectory: An input uncompressed_trajectory
+	:type trajectory: xarray with a read uncompressed_trajectory
 	:param radius: the radius around the geom
 	:type radius: float
-	:return: the filtered trajectory
+	:return: the filtered uncompressed_trajectory
 	:rtype: a list of xarray with the individual filtered frames
 	"""
 	n_frames = trajectory.sizes['time']
@@ -32,9 +32,9 @@ def filter_radius(trajectory, radius):
 
 def calculate_geometric_center(frame):
 	"""
-	Calculates the geometrc center of a given timeframe of a trajectory
+	Calculates the geometrc center of a given timeframe of a uncompressed_trajectory
 
-	:param frame: a timeframe of a LAMMPS trajectory
+	:param frame: a timeframe of a LAMMPS uncompressed_trajectory
 	:type frame: xarray with a single timeframe
 	:return: the geometric center (x,y,z coordinates of the geometric center)
 	:rtype: xarray
@@ -46,16 +46,16 @@ def calculate_geometric_center(frame):
 def radii_around_geometric_center(trajectory, timestep, center=None):
 	"""
 	Calculates the radii of the individual particles around a geometric center
-	in a selected time frame of a LAMPPS trajectory.
+	in a selected time frame of a LAMPPS uncompressed_trajectory.
 	Usually the center to calculate the radii for is the goemetric center of the
-	particle cloud in the LAMMPS trajectory.
+	particle cloud in the LAMMPS uncompressed_trajectory.
 
-	:param trajectory: a LAMMPS trajectory
-	:type trajectory: xarray with an imported LAMMPS trajectory
+	:param trajectory: a LAMMPS uncompressed_trajectory
+	:type trajectory: xarray with an imported LAMMPS uncompressed_trajectory
 	:param timestep: index of the timestep to calculate the radii for
 	:type timestep: int
 	:param center: optional: center of the radius calculcation, if not set the
-	center is the geometric center of the particle cloud in the trajectory
+	center is the geometric center of the particle cloud in the uncompressed_trajectory
 	:type center: array with the x,y,z positions of the center to calculate the radii for
 	:return: the calculated radii and the geometric center of the particle cloud
 	"""

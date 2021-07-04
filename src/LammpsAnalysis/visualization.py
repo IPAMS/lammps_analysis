@@ -11,11 +11,11 @@ import LammpsAnalysis.analysis as la
 
 def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='c_ke_all'):
 	"""
-	Plots a histogram of the energy distribution in a given trajectory frame.
-	The names of the data columns in the trajectory to generate the histogram for
+	Plots a histogram of the energy distribution in a given uncompressed_trajectory frame.
+	The names of the data columns in the uncompressed_trajectory to generate the histogram for
 	are variable.
 
-	:param frame: a timeframe of a LAMMPS trajectory
+	:param frame: a timeframe of a LAMMPS uncompressed_trajectory
 	:type frame: xarray
 	:param bins: the bins for the histogram (according to the matplotlib histogram method)
 	:type bins: int or numpy.array or list
@@ -43,10 +43,10 @@ def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='
 def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all', col_name_ke='c_ke_all'):
 	"""
 	Plots a line plot of the average or summed energies in a time series of
-	LAMMPS simulation trajectory frames
+	LAMMPS simulation uncompressed_trajectory frames
 
-	:param trajectory: the trajectory / trajectory frame time series
-	:type trajectory: list of trajectory frames or xarray of stacked frames with time as
+	:param trajectory: the uncompressed_trajectory / uncompressed_trajectory frame time series
+	:type trajectory: list of uncompressed_trajectory frames or xarray of stacked frames with time as
 	one dimension
 	:param mode: 'average' calculates the averaged energies, 'sum' the sum of energies
 	:type mode: str
@@ -155,10 +155,10 @@ def scatter_animation(trajectory, color_param='c_ke_all'):
 	"""
 	Creates an animated three dimensional scatter plot (with ipyvolume)
 
-	Currently the trajectory has to be a sorted trajectory with invariant number
-	of particles in the individual trajectory frames
+	Currently the uncompressed_trajectory has to be a sorted uncompressed_trajectory with invariant number
+	of particles in the individual uncompressed_trajectory frames
 
-	:param trajectory: the LAMMPS trajectory to visualize
+	:param trajectory: the LAMMPS uncompressed_trajectory to visualize
 	:param color_param: the name of the data column to use to colorize the particles
 	:type color_param: str
 	:return: None
