@@ -54,7 +54,7 @@ def read_trajectory(filename, frames_to_read=None):
 				for line in lines:
 					strio.write(line)
 				strio.seek(0)
-				dat = pd.read_csv(strio, delimiter=' ', header=None).values[:, :-1]
+				dat = pd.read_csv(strio, delimiter=' ', header=None).values[:, :]
 
 				data.append(
 					xr.DataArray(dat, dims=('particles', 'params'), coords={'params': parcoords, 'time': time})
@@ -82,9 +82,26 @@ def filter_species_frame(trajectory, timestep, species):
 	:rtype: xarray
 	"""
 	selected_ts = trajectory[timestep]
-	frame = selected_ts[np.in1d(selected_ts.loc[:, 'type'], species)]
+	frame = selected_ts[(np.in1d(selected_ts.loc[:, 'type'], species))]
 	return frame
 
+def filter_inverse_species_frame(trajectory, timestep, species):
+	"""
+	Filters out a single timeframe with selected species
+	(The returned frames is not sorted according to id's)
+
+	:param trajectory: A LAMMPS uncompressed_trajectory
+	:type trajectory: xarray with a LAMMPS uncompressed_trajectory
+	:param timestep: The timestep of the selected frame
+	:type timestep: int
+	:param species: A list of species type id's which are selected
+	:type species: list of int
+	:return: xarray with the filtered uncompressed_trajectory frame
+	:rtype: xarray
+	"""
+	selected_ts = trajectory[timestep]
+	frame = selected_ts[~(np.in1d(selected_ts.loc[:, 'type'], species))]
+	return frame
 
 def filter_species_trajectory(trajectory, species):
 	"""
@@ -104,6 +121,29 @@ def filter_species_trajectory(trajectory, species):
 	buf = []
 	for i in range(n_frames):
 		frame_unsorted = filter_species_frame(trajectory, i, species)
+		frame = frame_unsorted.sortby(frame_unsorted.loc[:, 'id'])
+		buf.append(frame)
+	result = xr.concat(buf, dim='time')
+	return result
+
+def filter_inverse_species_trajectory(trajectory, species):
+	"""
+	Filters out a uncompressed_trajectory of selected species from a LAMMPS uncompressed_trajectory.
+
+	The returned frames are sorted according to id's, so the indices of the individual particles
+	do not change over time.
+
+	:param trajectory: A LAMMPS uncompressed_trajectory
+	:type trajectory: xarray with a LAMMPS uncompressed_trajectory
+	:param species: A list of species type id's which are selected
+	:type species: list of int
+	:return: xarray with the filtered uncompressed_trajectory
+	:rtype: xarray
+	"""
+	n_frames = trajectory.sizes['time']
+	buf = []
+	for i in range(n_frames):
+		frame_unsorted = filter_inverse_species_frame(trajectory, i, species)
 		frame = frame_unsorted.sortby(frame_unsorted.loc[:, 'id'])
 		buf.append(frame)
 	result = xr.concat(buf, dim='time')
