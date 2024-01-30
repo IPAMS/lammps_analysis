@@ -8,25 +8,46 @@ import numpy as np
 import LammpsAnalysis.cluster.analysis as cl_analysis
 import pandas as pd
 
-def plot_cluster_count_trajectory(dataframe):
-    ## get number of clusters per frame for whole dataset
-    cluster_count = cl_analysis.cluster_count_trajectory(dataframe)
-    
-    sc = plt.plot(cluster_count)
-    plt.xlabel('timestep')
-    plt.ylabel('cluster count')
+def plot_cluster_count_trajectory(trajectory):
+    """
+    Plots the cluster count for each frame of the trajectory
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :return: figure axis
+    :rtype: mpl axis
+    """
+    cluster_count = cl_analysis.cluster_count_trajectory(trajectory)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(cluster_count)
+    ax.set_xlabel('timestep')
+    ax.set_ylabel('cluster count')
     plt.show()
 
-    return sc
+    return ax
 
 
-def plot_droplet_kinetic_energy_timeseries(data, wall_type, collision_limit=5):
-    kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(data, wall_type)
+def plot_droplet_kinetic_energy_timeseries(trajectory, wall_type, collision_limit=5):
+    """
+    Plots the kinetic energy for each frame of the trajectory.
+    Additionally, the point of collision between droplet and wall is calculated.
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param collision_limit: number of frames around the collision to plot seperately, defaults to 5
+    :type collision_limit: int, optional
+    :return: figure axes
+    :rtype: mpl axes
+    """
+    kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
     infls = cl_analysis.inflection_points(kes)
     
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    sc = ax.plot(kes)
+    ax.plot(kes)
     plt.xlabel("timestep")
     plt.ylabel("kinetic energy of droplet in eV")
 
@@ -35,16 +56,29 @@ def plot_droplet_kinetic_energy_timeseries(data, wall_type, collision_limit=5):
         ax.scatter(x=infl, y=kes[infl], color='green', label='Collision point', marker='x')
         ax2.scatter(x=infl, y=kes[infl], color='green', label='Collision point', marker='x')
     
-    sc2 = ax2.plot(list(range(infls[0]-collision_limit,infls[0]+collision_limit)), 
-                               kes[infls[0]-collision_limit:infls[0]+collision_limit])
+    ax2.plot(list(range(infls[0]-collision_limit,infls[0]+collision_limit)), 
+                        kes[infls[0]-collision_limit:infls[0]+collision_limit])
     ax2.set_facecolor('white')
     ax.legend()
     mark_inset(ax, ax2, loc1=2, loc2=4, fc="none", ec="0.5")
     plt.show()
-    return sc, infls, kes
 
-def plot_cluster_distribution(dataframe, timestep, savefig=False):    
-    coms, masses, clusters = cl_analysis.get_all_cluster_distributions_in_space(dataframe, timestep)
+    return ax, ax2
+
+def plot_cluster_distribution(trajectory, timestep, savefig=False):    
+    """
+    Plots distribution of cluster in the xy plane for a given frame
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :param savefig: flag if plot should be saved, defaults to False
+    :type savefig: bool, optional
+    :return: figure axis
+    :rtype: mpl axis
+    """
+    coms, masses, clusters = cl_analysis.get_all_cluster_distributions_in_space(trajectory, timestep)
     reldata = pd.DataFrame({'x':coms[:,0], 'y':coms[:,1], 'z':coms[:,2], 'mass':np.round(masses,3), 'cluster':np.round(clusters,0)})
 
     sc = sns.scatterplot(reldata, x='x', y='y', hue='cluster', size='mass', palette="magma", legend='full', size_norm=matplotlib.colors.LogNorm())
@@ -56,18 +90,34 @@ def plot_cluster_distribution(dataframe, timestep, savefig=False):
     sc.set_ylabel('y in Å')
     sc.legend(loc='upper left', framealpha=1, bbox_to_anchor=(-0.12, -0.15), ncol=5)
 
-    plt.show()
     if(savefig):
         plt.savefig('cluster_distribution.pdf', bbox_inches='tight')
-    
+
+    plt.show()
     return sc
 
-def plot_boxplot_cluster_sizes_trajectory(dataframe, limit = 40, step=10, offset=0):
+def plot_boxplot_cluster_sizes_trajectory(trajectory, limit = 40, step=10, offset=0):
+    """
+    Plots boxplot of cluster sizes for specified timesteps. 
+    A limit allows to only plot below a given threshold of atoms in a cluster 
+    (essentially removing the wall cluster)
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param limit: count limit, defaults to 40
+    :type limit: int, optional
+    :param step: step size between frames, defaults to 10
+    :type step: int, optional
+    :param offset: start frame, defaults to 0
+    :type offset: int, optional
+    :return: figure axis
+    :rtype: mpl axis
+    """
     fig = plt.figure(figsize=(9,5))
     ax = fig.add_subplot(111)
     result = pd.DataFrame()
-    for i in range(0+offset, dataframe.shape[0], step):
-        counts = cl_analysis.count_atoms_clusters_unique_frame(dataframe[i])
+    for i in range(0+offset, trajectory.shape[0], step):
+        counts = cl_analysis.count_atoms_clusters_unique_frame(trajectory[i])
         result = pd.concat(axis=0, ignore_index=True, objs=[
             result,
             pd.DataFrame.from_dict({'count':counts, 'timestep':i})
@@ -80,14 +130,30 @@ def plot_boxplot_cluster_sizes_trajectory(dataframe, limit = 40, step=10, offset
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
-    return result, sc
+    return sc
 
-def plot_boxplot_cluster_masses_trajectory(dataframe, limit = 200, step=10, offset=0):
+def plot_boxplot_cluster_masses_trajectory(trajectory, limit = 200, step=10, offset=0):
+    """
+    Plots boxplot of cluster masses for specified timesteps. 
+    A limit allows to only plot below a given threshold of cluster mass 
+    (essentially removing the wall cluster)
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param limit: mass limit, defaults to 200
+    :type limit: int, optional
+    :param step: step size between frames, defaults to 10
+    :type step: int, optional
+    :param offset: start frame, defaults to 0
+    :type offset: int, optional
+    :return: figure axis
+    :rtype: mpl axis
+    """
     fig = plt.figure(figsize=(9,5))
     ax = fig.add_subplot(111)
     result = pd.DataFrame()
-    for i in range(0+offset, dataframe.shape[0], step):
-        masses = cl_analysis.count_mass_clusters_unique_frame(dataframe[i])
+    for i in range(0+offset, trajectory.shape[0], step):
+        masses = cl_analysis.count_mass_clusters_unique_frame(trajectory[i])
         result = pd.concat(axis=0, ignore_index=True, objs=[
             result,
             pd.DataFrame.from_dict({'mass':masses, 'timestep':i})
@@ -100,14 +166,25 @@ def plot_boxplot_cluster_masses_trajectory(dataframe, limit = 200, step=10, offs
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
-    return result, sc
+    return sc
 
-def plot_histogram_atoms_cluster(dataframe,timestep):
-    counts = cl_analysis.count_atoms_clusters_unique(dataframe,timestep)
+def plot_histogram_atoms_cluster(trajectory, timestep):
+    """
+    Plots histogram of number of atoms in all clusters for a given timestep.
+    Additionally, all bins under  a limit are plotted in a smaller window
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :return: figure axes
+    :rtype: mpl axes
+    """
+    counts = cl_analysis.count_atoms_clusters_unique(trajectory,timestep)
 
     reldata = pd.DataFrame({'atom count':counts})
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
     sc = sns.histplot(reldata, x='atom count', log_scale=True, stat='count', ax=ax1)
     sc.set_ylabel('count #')
 
@@ -116,31 +193,58 @@ def plot_histogram_atoms_cluster(dataframe,timestep):
     ax2.set_facecolor('white')
     sc2.set_ylabel('count #')
     plt.show()
-    return sc, sc2, fig1
+    return sc, sc2
 
-def plot_histogram_mass_cluster(dataframe,timestep):
-    masses = cl_analysis.count_mass_clusters_unique(dataframe,timestep)
+def plot_histogram_mass_cluster(trajectory, timestep):
+    """
+    Plots histogram of mass of all clusters for a given timestep.
+    Additionally, all bins under a limit are plotted in a smaller window
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :return: figure axes
+    :rtype: mpl axes
+    """
+    masses = cl_analysis.count_mass_clusters_unique(trajectory,timestep)
 
     reldata = pd.DataFrame({'cluster masses':masses})
-    fig1 = plt.figure()
-    ax1 = fig1.add_subplot(111)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
     sc = sns.histplot(reldata, x='cluster masses', log_scale=True, stat='count', ax=ax1)
     sc.set_ylabel('count #')
+    sc.set_xlabel('cluster masses in Da')
+
 
     ax2 = plt.axes([.46, .5, .4, .3])
     sc2 = sns.histplot(reldata[reldata < 200], x='cluster masses', stat='count', discrete=True, ax=ax2)
     ax2.set_facecolor('white')
     sc2.set_ylabel('count #')
     plt.show()
-    return sc, fig1
+    return sc, sc2
 
 
-def plot_distribution_cluster_size_timeseries(dataframe, limit=40, step=10, offset=0):
+def plot_distribution_cluster_size_timeseries(trajectory, limit=40, step=10, offset=0):
+    """
+    Plots cluster size distribution for multiple frames in a single histogram
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param limit: cluster size limit, defaults to 40
+    :type limit: int, optional
+    :param step: step size between frames, defaults to 10
+    :type step: int, optional
+    :param offset: start frame, defaults to 0
+    :type offset: int, optional
+    :return: figure axis
+    :rtype: mpl axis
+    """
     fig = plt.figure(figsize=(10,5))
     ax = fig.add_subplot(111)
     result = pd.DataFrame()
-    for i in range(0+offset, dataframe.shape[0], step):
-        counts = cl_analysis.count_atoms_clusters_unique_frame(dataframe[i])
+    for i in range(0+offset, trajectory.shape[0], step):
+        counts = cl_analysis.count_atoms_clusters_unique_frame(trajectory[i])
         result = pd.concat(axis=0, ignore_index=True, objs=[
             result,
             pd.DataFrame.from_dict({'count':counts, 'timestep':i})
@@ -151,47 +255,30 @@ def plot_distribution_cluster_size_timeseries(dataframe, limit=40, step=10, offs
     sc.set_ylabel('count #')
     sns.move_legend(sc, "upper right", ncol=5, frameon=True)
     plt.show()
-    return result, sc
+    return sc
 
 
 def circular_hist(ax, x, bins=16, density=True, offset=0, gaps=True):
     """
-    Produce a circular histogram of angles on ax.
+    Produce a circular histogram of angles on axis
 
-    Parameters
-    ----------
-    ax : matplotlib.axes._subplots.PolarAxesSubplot
-        axis instance created with subplot_kw=dict(projection='polar').
-
-    x : array
-        Angles to plot, expected in units of radians.
-
-    bins : int, optional
-        Defines the number of equal-width bins in the range. The default is 16.
-
-    density : bool, optional
-        If True plot frequency proportional to area. If False plot frequency
-        proportional to radius. The default is True.
-
-    offset : float, optional
-        Sets the offset for the location of the 0 direction in units of
-        radians. The default is 0.
-
-    gaps : bool, optional
-        Whether to allow gaps between bins. When gaps = False the bins are
-        forced to partition the entire [-pi, pi] range. The default is True.
-
-    Returns
-    -------
-    n : array or list of arrays
-        The number of values in each bin.
-
-    bins : array
-        The edges of the bins.
-
-    patches : `.BarContainer` or list of a single `.Polygon`
-        Container of individual artists used to create the histogram
-        or list of such containers if there are multiple input datasets.
+    :param ax: axis instance
+    :type ax: mpl axis
+    :param x: Angles to plot, expected in units of radians
+    :type x: list
+    :param bins: defines the number of equal-width bins in the range, defaults to 16
+    :type bins: int, optional
+    :param density: If True plot frequency proportional to area. If False plot frequency
+        proportional to radius, defaults to True
+    :type density: bool, optional
+    :param offset: offset for the location of the 0 direction in units of
+        radians, defaults to 0
+    :type offset: int, optional
+    :param gaps: whether to allow gaps between bins. When gaps = False the bins are
+        forced to partition the entire [-pi, pi] range, defaults to True
+    :type gaps: bool, optional
+    :return: number of values in each bin, edges of bins, container of individual artists used to create the histogram
+    :rtype: list, list, container/polygon
     """
     # Wrap angles to [-pi, pi)
     x = (x+np.pi) % (2*np.pi) - np.pi
@@ -234,6 +321,22 @@ def circular_hist(ax, x, bins=16, density=True, offset=0, gaps=True):
 
 
 def scattering_angles(trajectory, timestep, wall_type, limit, wall_vector=np.array([1, 0])):
+    """
+    Calculates scattering angles between clusters and wall given by normal vector
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param limit: limit for cluster mass to include
+    :type limit: float
+    :param wall_vector: normal vector of wall/vector to take the angle with, defaults to np.array([1, 0])
+    :type wall_vector: list, optional
+    :return: scattering angles of all clusters
+    :rtype: list
+    """
     kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
     infls = cl_analysis.inflection_points(kes)
     collision_point = infls[0]
@@ -261,21 +364,70 @@ def scattering_angles(trajectory, timestep, wall_type, limit, wall_vector=np.arr
     return angles
 
 def radial_distribution_histogram(trajectory, timestep, wall_type, ax, limit, wall_vector=np.array([1, 0])):
+    """
+    Computes one histogram of scattering angles for a given timestep of the cluster trajectory.
+    This function is used in the animation of scattering angle evolution
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param ax: axis to plot to
+    :type ax: mpl axis
+    :param limit: mass limit on the clusters
+    :type limit: float
+    :param wall_vector: normal vector of wall/vector to take the angle with, defaults to np.array([1, 0])
+    :type wall_vector: list, optional
+    """
 
     angles = scattering_angles(trajectory, timestep, wall_type, limit, wall_vector)
     circular_hist(ax, angles)
     plt.show()
 
 def plot_radial_distribution(trajectory, timestep, wall_type, limit, wall_vector=np.array([1, 0])):
+    """
+    Plots one histogram of scattering angles for a given timestep of the cluster trajectory
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param limit: mass limit on the clusters
+    :type limit: float
+    :param wall_vector: normal vector of wall/vector to take the angle with, defaults to np.array([1, 0])
+    :type wall_vector: list, optional
+    :return: figure axis
+    :rtype: mpl axis
+    """
     
     angles = scattering_angles(trajectory, timestep, wall_type, limit, wall_vector)
     fig, ax = plt.subplots(1, 1, subplot_kw=dict(projection='polar'))
     circular_hist(ax, angles)
     plt.show()
-    return fig, ax
+    return ax
 
 
 def animate_radial_distribution(trajectory, wall_type, animation_range, output, limit, wall_vector=np.array([1, 0])):
+    """
+    Animates scattering angle distrubtion over a given range of frames for the cluster trajectory
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param animation_range: range for animation over the frames
+    :type animation_range: list
+    :param output: filename to save the animation
+    :type output: string
+    :param limit: mass limit for the selected clusters
+    :type limit: float
+    :param wall_vector: normal vector of wall/vector to take the angle with, defaults to np.array([1, 0])
+    :type wall_vector: list, optional
+    """
     fig, ax = plt.subplots(1, 1, subplot_kw=dict(projection='polar'))
 
     x = range(animation_range[0], animation_range[1])
