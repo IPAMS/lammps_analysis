@@ -1,6 +1,6 @@
 import unittest
-import LammpsAnalysis.trajectory as ltra
-import LammpsAnalysis.analysis as lana
+import LammpsAnalysis.trajectory.trajectory as ltra
+import LammpsAnalysis.trajectory.analysis as lana
 import numpy as np
 import os
 

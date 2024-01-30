@@ -1,5 +1,5 @@
 import unittest
-import LammpsAnalysis.trajectory as ltra
+import LammpsAnalysis.trajectory.trajectory as ltra
 import os
 
 

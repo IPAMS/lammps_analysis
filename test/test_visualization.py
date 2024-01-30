@@ -1,6 +1,6 @@
 import unittest
-import LammpsAnalysis.trajectory as ltra
-import LammpsAnalysis.visualization as lvisu
+import LammpsAnalysis.trajectory.trajectory as ltra
+import LammpsAnalysis.trajectory.visualization as lvisu
 import matplotlib.pylab as plt
 import numpy as np
 import os.path as pt

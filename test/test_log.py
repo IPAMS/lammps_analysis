@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import LammpsAnalysis.log as llog
+import LammpsAnalysis.trajectory.log as llog
 import os.path as pt
 
 class Test_log(unittest.TestCase):
