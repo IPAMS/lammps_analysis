@@ -116,61 +116,116 @@ def filter_clusters_unique_frame(dataframe):
     clusters = dataframe.loc[:,'Cluster'].unique()
     return clusters
 
-def count_atoms_clusters_unique(dataframe, timestep):
-    selected_ts = dataframe[timestep].to_pandas()
+def count_atoms_clusters_unique(trajectory, timestep):
+    """
+    Count number of atoms in all clusters in a given timeframe 
+    of a trajectory
+
+    :param trajectory: cluster trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :return: number of atoms in clusters
+    :rtype: list
+    """
+    selected_ts = trajectory[timestep].to_pandas()
     clusters = filter_clusters_unique_frame(selected_ts)
     atom_counts = []
     for cluster in clusters:
         atom_counts.append(selected_ts.query('Cluster ==' + str(cluster)).shape[0])
-
-    ## get number of atoms in each cluster in a dataframe / how many clusters have x amount of atoms    
     return atom_counts
 
 def count_atoms_clusters_unique_frame(dataframe):
+    """
+    Count number of atoms in all clusters in a given data cluster frame
+
+    :param trajectory: cluster data frame
+    :type trajectory: xarray
+    :return: number of atoms in clusters
+    :rtype: list
+    """
     selected_ts = dataframe.to_pandas()
     clusters = filter_clusters_unique_frame(selected_ts)
     atom_counts = []
     for cluster in clusters:
         atom_counts.append(selected_ts.query('Cluster ==' + str(cluster)).shape[0])
-
-    ## get number of atoms in each cluster in a dataframe / how many clusters have x amount of atoms    
     return atom_counts
 
-def count_mass_clusters_unique(dataframe, timestep):
-    selected_ts = dataframe[timestep].to_pandas()
+def count_mass_clusters_unique(trajectory, timestep):
+    """
+    Calculate mass of all clusters in a given timeframe 
+    of a trajectory
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :return: mass of clusters
+    :rtype: list
+    """
+    selected_ts = trajectory[timestep].to_pandas()
     clusters = filter_clusters_unique_frame(selected_ts)
     mass_clusters = []
     for cluster in clusters:
         mass_clusters.append(cluster_mass(selected_ts, cluster))
-
-    ## get number of atoms in each cluster in a dataframe / how many clusters have x amount of atoms    
     return mass_clusters
 
 def count_mass_clusters_unique_frame(dataframe):
+    """
+    Calculate mass of all clusters in a given data cluster frame
+
+    :param trajectory: cluster data frame
+    :type trajectory: xarray
+    :return: mass of clusters
+    :rtype: list
+    """
     selected_ts = dataframe.to_pandas()
     clusters = filter_clusters_unique_frame(selected_ts)
     mass_clusters = []
     for cluster in clusters:
         mass_clusters.append(cluster_mass(selected_ts, cluster))
-
-    ## get number of atoms in each cluster in a dataframe / how many clusters have x amount of atoms    
     return mass_clusters
 
-def cluster_count_trajectory(dataframe):
-    ## get number of clusters per frame for whole dataset
+def cluster_count_trajectory(trajectory):
+    """
+    Count number of clusters for each frame of a cluster trajectory
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :return: number of clusters in each timestep
+    :rtype: list of ints
+    """
     cluster_count = []
-    for frame in dataframe:
+    for frame in trajectory:
         cluster_count.append(np.unique( frame.loc[:,'Cluster']).max())
     return cluster_count
 
 
-def generate_droplet_kinetic_energy_timeseries(data, wall_type):
-    ke_series = [droplet_kinetic_energy(frame.to_pandas(), wall_type) for frame in data]
+def generate_droplet_kinetic_energy_timeseries(trajectory, wall_type):
+    """
+    Calculates the kinetic energy (no internal) of a droplet (all atom types except wall type)
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :return: Kinetic energy of droplet for each timestep
+    :rtype: list 
+    """
+    ke_series = [droplet_kinetic_energy(frame.to_pandas(), wall_type) for frame in trajectory]
     return ke_series
 
 def inflection_points(kes):
-    ## find inflection points 
-    #  (should be one only, otherwise only first is used for collision detection)
+    """
+    Based on the supplied kinetic energies the inflection points of the smoothed 
+    gaussian kernel are calculated.
+    For collision detection with the wall only the first inflection point is relevant.
+
+    :param kes: kinetic energies
+    :type kes: list
+    :return: inflection points (index)
+    :rtype: int or list
+    """
     # smooth
     smooth = gaussian_filter1d(kes, 35, mode='nearest')
     # compute second derivative
@@ -179,8 +234,19 @@ def inflection_points(kes):
     infls = np.where(np.diff(np.sign(smooth_d2)))[0]
     return infls
 
-def get_all_cluster_distributions_in_space(dataframe, timestep):
-    frame = cl.filter_frame(dataframe, timestep)
+def get_all_cluster_distributions_in_space(trajectory, timestep):
+    """
+    Computes all center-of-mass positions and the respective mass 
+    of all clusters in a given frame
+
+    :param trajectory: cluster data trajectory
+    :type trajectory: xarray
+    :param timestep: frame number
+    :type timestep: int
+    :return: Center-of-mass position, masses and clusters
+    :rtype: numpy arrays
+    """
+    frame = cl.filter_frame(trajectory, timestep)
     clusters = filter_clusters_unique_frame(frame)
     coms = []
     masses = []
@@ -190,9 +256,22 @@ def get_all_cluster_distributions_in_space(dataframe, timestep):
 
     return np.asfarray(coms), np.array(masses), np.array(clusters, dtype=np.int8)
 
-
-
 def cluster_kinetic_energy(dataframe, cluster_number, ev=True, total=False):
+    """
+    Computes kinetic energy of a given cluster in a single cluster data frame.
+    If total energy is calculated, vibrations are also accounted for.
+
+    :param dataframe: cluster data frame
+    :type dataframe: dataframe 
+    :param cluster_number: ID of the cluster 
+    :type cluster_number: int
+    :param ev: flag if energy should be given in eV or J, defaults to True
+    :type ev: bool, optional
+    :param total: flag if total energy should be calculated, defaults to False
+    :type total: bool, optional
+    :return: kinetic energy of cluster
+    :rtype: float
+    """
     filtered_df = dataframe.query('Cluster ==' + str(cluster_number))
     if(total):
         ke = filtered_df.apply(lambda x: calc_kinetic_energy(x.Mass, x.Velocity), axis=1)
@@ -221,6 +300,21 @@ def cluster_kinetic_energy(dataframe, cluster_number, ev=True, total=False):
             return ke
 
 def droplet_kinetic_energy(dataframe, wall_type, ev=True, total=False):
+    """
+    Computes kinetic energy of all droplet atoms in a single cluster data frame.
+    If total energy is calculated, vibrations are also accounted for.
+
+    :param dataframe: cluster data frame
+    :type dataframe: dataframe 
+    :param wall_type: ID of wall atoms
+    :type wall_type: int
+    :param ev: flag if energy should be given in eV or J, defaults to True
+    :type ev: bool, optional
+    :param total: flag if total energy should be calculated, defaults to False
+    :type total: bool, optional
+    :return: kinetic energy of droplet
+    :rtype: float
+    """
 
     filtered_df = dataframe.query('Type !=' + str(wall_type))
     if(total):
@@ -250,6 +344,19 @@ def droplet_kinetic_energy(dataframe, wall_type, ev=True, total=False):
             return ke
 
 def cluster_center_of_mass(dataframe, cluster_number, si=False):
+    """
+    Calculates center-of-mass position of a given cluster in a cluster data frame.
+    Units assumed in LAMMPS for length: Å
+
+    :param dataframe: cluster data frame
+    :type dataframe: dataframe
+    :param cluster_number: ID of cluster
+    :type cluster_number: int
+    :param si: flag if result should be given in SI units, defaults to False
+    :type si: bool, optional
+    :return: center-of-mass position of cluster
+    :rtype: list
+    """
     filtered_df = dataframe.query('Cluster ==' + str(cluster_number))
     total_mass = filtered_df['Mass'].to_numpy().sum() * 1.66054e-27
     x = filtered_df['X']
@@ -269,6 +376,19 @@ def cluster_center_of_mass(dataframe, cluster_number, si=False):
         return [com_x*1e10, com_y*1e10, com_z*1e10]
     
 def cluster_center_of_velocity_direction(dataframe, cluster_number, si=False):
+    """
+    Calculates center-of-mass velocity of a given cluster in a cluster data frame.
+    Units assumed in LAMMPS for velocity: Å/fs
+
+    :param dataframe: cluster data frame
+    :type dataframe: dataframe
+    :param cluster_number: ID of cluster
+    :type cluster_number: int
+    :param si: flag if result should be given in SI units, defaults to False
+    :type si: bool, optional
+    :return: center-of-mass velocity of cluster
+    :rtype: list
+    """
     filtered_df = dataframe.query('Cluster ==' + str(cluster_number))
     total_mass = filtered_df['Mass'].to_numpy().sum() * 1.66054e-27
     vx = filtered_df['VX']
