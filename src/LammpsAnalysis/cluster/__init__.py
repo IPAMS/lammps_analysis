@@ -8,7 +8,7 @@ Modules:
 """
 
 from . import cluster
-from .trajectory import *
+from .cluster import *
 from . import analysis
 from .analysis import *
 from . import visualization
