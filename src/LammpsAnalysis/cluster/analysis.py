@@ -2,7 +2,7 @@ import math
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-import LammpsAnalysis.cluster.cluster as cl 
+import LammpsAnalysis.cluster.cluster as cl_cluster
 
 def largest_value_column(dataframe, attribute):
     """
@@ -246,7 +246,7 @@ def get_all_cluster_distributions_in_space(trajectory, timestep):
     :return: Center-of-mass position, masses and clusters
     :rtype: numpy arrays
     """
-    frame = cl.filter_frame(trajectory, timestep)
+    frame = cl_cluster.filter_frame(trajectory, timestep)
     clusters = filter_clusters_unique_frame(frame)
     coms = []
     masses = []
