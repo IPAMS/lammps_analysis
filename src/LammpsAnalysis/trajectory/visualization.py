@@ -137,7 +137,7 @@ def plot_radial_density(trajectories, bins=50, selected_frames='all'):
 	for tra in trajectories:
 		radii = xr.concat(buf[tra[1]], dim='time')
 		particles = radii.values
-		hbins, edges = np.histogram(particles, bins, normed=1)
+		hbins, edges = np.histogram(particles, bins, density=True)
 		left, right = edges[:-1], edges[1:]
 		X = np.array([left, right]).T.flatten()
 		Y = np.array([hbins, hbins]).T.flatten()
