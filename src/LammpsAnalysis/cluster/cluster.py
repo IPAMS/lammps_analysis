@@ -156,7 +156,7 @@ def xarray_filter_species_frame(trajectory, timestep, species):
 	frame = selected_ts[(np.in1d(selected_ts.loc[:, 'Type'], species))]
 	return frame
 
-def filter_trajectory(trajectory, species):
+def filter_species_trajectory(trajectory, species):
 	"""
 	Filters out cluster data trajectory of selected species from Ovito cluster data.
 
