@@ -458,15 +458,17 @@ def filter_clusters_atom_composition_unique_frame(dataframe):
     
     return molecules_frame
 
-def filter_clusters_atom_composition(trajectory, timestep):
+def filter_clusters_atom_composition(trajectory, timestep, limit=300):
     """
     Returns the cluster classification with occurences in a given timestep of
-    a cluster data trajectory
+    a cluster data trajectory with atom count limit
 
     :param trajectory: cluster data trajectory
     :type dataframe: dataframe
     :param timestep: frame number
     :type timestep: int
+    :param limit: atom count limit, defaults to 300
+    :type limit: int, optional
     :return: classification and occurence of cluster types
     :rtype: dataframe
     """
@@ -481,7 +483,7 @@ def filter_clusters_atom_composition(trajectory, timestep):
     molcules = []
     for cluster in clusters: 
         filtered_df = df.query('Cluster ==' + str(cluster))
-        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < 300:
+        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < limit:
             cluster_typing = []
             atoms = filtered_df["Type"].values
             for atom in atoms: 

@@ -534,10 +534,38 @@ def plot_series_collision_points(trajectories, voltages, wall_type):
 
     return ax
 
-def plot_cluster_composition(trajectory, timestep):
+def plot_cluster_composition(trajectory, timestep, limit = 300):
 
-    clusters = cl_analysis.filter_clusters_atom_composition(trajectory, timestep)
+    clusters = cl_analysis.filter_clusters_atom_composition(trajectory, timestep, limit)
     ax = sns.barplot(clusters, x="occurence", y="cluster", orient="y")
-    ax.set_xlabel("occurence in %")
+    ax.set_xlabel("occurence")
+    plt.show()
 
     return ax 
+
+def plot_cluster_composition_single_frame(trajectory, timestep, ax, limit = 300):
+
+    clusters = cl_analysis.filter_clusters_atom_composition(trajectory, timestep, limit)
+    sns.barplot(clusters, x="occurence", y="cluster", orient="y", ax=ax)
+    ax.set_xlabel("occurence")
+    plt.show()
+
+
+def animate_cluster_composition(trajectory, animation_range, output, limit = 300):
+    fig, ax = plt.subplots(1, 1)
+    fig.set_tight_layout(True)
+
+    x = range(animation_range[0], animation_range[1])
+
+    def make_frame(i):
+        ax.clear()
+        plot_cluster_composition_single_frame(trajectory, i, ax, limit)
+
+    # creating animation
+    animation = FuncAnimation(fig,make_frame,frames=len(x))
+    plt.close()
+
+    from matplotlib.animation import PillowWriter
+    # Save the animation as an animated GIF
+    animation.save(output+".gif", dpi=600,
+             writer=PillowWriter(fps=2))
