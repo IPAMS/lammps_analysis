@@ -476,7 +476,7 @@ def filter_clusters_atom_composition(trajectory, timestep):
                     'N':(694,), 
                     'C':(695,696)}
 
-    df = trajectory[timestep]
+    df = trajectory[timestep].to_pandas()
     clusters = filter_clusters_unique_frame(df)
     molcules = []
     for cluster in clusters: 

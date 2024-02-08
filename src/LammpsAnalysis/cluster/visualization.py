@@ -534,3 +534,10 @@ def plot_series_collision_points(trajectories, voltages, wall_type):
 
     return ax
 
+def plot_cluster_composition(trajectory, timestep):
+
+    clusters = cl_analysis.filter_clusters_atom_composition(trajectory, timestep)
+    ax = sns.barplot(clusters, x="occurence", y="cluster", orient="y")
+    ax.set_xlabel("occurence in %")
+
+    return ax 
