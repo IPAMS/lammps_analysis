@@ -52,9 +52,8 @@ def plot_droplet_kinetic_energy_timeseries(trajectory, wall_type, collision_limi
     plt.ylabel("kinetic energy of droplet in eV")
 
     ax2 = plt.axes([.56, .4, .3, .3])
-    for i, infl in enumerate(infls, 1):
-        ax.scatter(x=infl, y=kes[infl], color='green', label='Collision point', marker='x')
-        ax2.scatter(x=infl, y=kes[infl], color='green', label='Collision point', marker='x')
+    ax.scatter(x=infls[0], y=kes[infls[0]], color='green', label='Collision point', marker='x')
+    ax2.scatter(x=infls[0], y=kes[infls[0]], color='green', label='Collision point', marker='x')
     
     ax2.plot(list(range(infls[0]-collision_limit,infls[0]+collision_limit)), 
                         kes[infls[0]-collision_limit:infls[0]+collision_limit])
@@ -444,3 +443,94 @@ def animate_radial_distribution(trajectory, wall_type, animation_range, output, 
     # Save the animation as an animated GIF
     animation.save(output+".gif", dpi=400,
              writer=PillowWriter(fps=5))
+    
+
+def plot_series_cluster_count(trajectories, voltages, timestep):
+    """
+    Plots the total cluster count in a given timestep for a series of cluster 
+    data trajectories which vary in their "acceleration" voltage
+
+    :param trajectories: cluster data trajectories
+    :type trajectories: list
+    :param voltages: voltages for each trajectory
+    :type voltages: list
+    :param timestep: frame number
+    :type timestep: int
+    :return: figure axis 
+    :rtype: mpl axis
+    """
+    counts = []
+    for trajectory in trajectories:
+        count = cl_analysis.filter_clusters_unique(trajectory, timestep)
+        counts.append(np.size(count))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    lineObj = ax.plot(voltages, counts, '--x', label='Timestep: ' + str(timestep))
+    ax.legend()
+    ax.set_xlabel('voltage in V')
+    ax.set_ylabel('average cluster count')
+    plt.show()
+
+    return ax
+
+def plot_series_cluster_count_whole_trajectory(trajectories, voltages):
+    """
+    Plots the mean cluster count and the std. deviation for a series of cluster 
+    data trajectories which vary in their "acceleration" voltage
+
+    :param trajectories: cluster data trajectories
+    :type trajectories: list
+    :param voltages: voltages for each trajectory
+    :type voltages: list
+    :return: figure axis 
+    :rtype: mpl axis
+    """
+    counts = []
+    stddevs = []
+    for trajectory in trajectories:
+        frame_counts = []
+        for frame in trajectory: 
+            count = cl_analysis.filter_clusters_unique_frame(frame.to_pandas())
+            frame_counts.append(np.size(count))
+        stddevs.append(np.std(frame_counts))
+        counts.append(np.mean(frame_counts))
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    lineObj = ax.errorbar(voltages, counts, yerr=stddevs, fmt='x', capsize=5)
+    ax.set_xlabel('voltage in V')
+    ax.set_ylabel('average cluster count')
+    plt.show()
+
+    return ax
+
+def plot_series_collision_points(trajectories, voltages, wall_type):
+    """
+    Plots the numerically calculated collision points for a series of cluster 
+    data trajectories which vary in their "acceleration" voltage 
+
+    :param trajectories: cluster data trajectories
+    :type trajectories: list
+    :param voltages: voltages for each trajectory
+    :type voltages: list
+    :param wall_type: ID of the wall atoms
+    :type wall_type: int
+    :return: figure axis
+    :rtype: mpl axis
+    """
+    collision_points = []
+    for trajectory in trajectories:
+        kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
+        infls = cl_analysis.inflection_points(kes)
+        collision_points.append(infls[0])
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(voltages, collision_points, '--x')
+    ax.set_xlabel('voltage in V')
+    ax.set_ylabel('timestep of collision')
+    plt.show()
+
+    return ax
+
