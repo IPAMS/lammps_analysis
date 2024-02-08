@@ -3,6 +3,10 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
 import LammpsAnalysis.cluster.cluster as cl_cluster
+from collections import Counter
+import pandas as pd
+import re
+from chemformula import ChemFormula
 
 def largest_value_column(dataframe, attribute):
     """
@@ -406,3 +410,100 @@ def cluster_center_of_velocity_direction(dataframe, cluster_number, si=False):
         return [com_vx, com_vy, com_vz]
     else:
         return [com_vx*1e-5, com_vy*1e-5, com_vz*1e-5]
+    
+
+def filter_clusters_atom_composition_unique_frame(dataframe):
+    """
+    Returns the cluster classification with occurences of a single cluster data frame
+
+    :param dataframe: cluster data frame
+    :type dataframe: dataframe
+    :return: classification and occurence of cluster types
+    :rtype: dataframe
+    """
+    atom_mapping = {'O':(63,), 
+                    'H':(64,700), 
+                    'Li':(348,), 
+                    'N':(694,), 
+                    'C':(695,696)}
+
+    clusters = filter_clusters_unique_frame(dataframe)
+    molcules = []
+    for cluster in clusters: 
+        filtered_df = dataframe.query('Cluster ==' + str(cluster))
+        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < 300:
+            cluster_typing = []
+            atoms = filtered_df["Type"].values
+            for atom in atoms: 
+                for element in atom_mapping:
+                    for value in atom_mapping[element]:
+                        if atom == value: 
+                            cluster_typing.append(element)
+            classified_cluster = Counter(sorted(cluster_typing))
+            molecular_formula = ''
+            for key, value in classified_cluster.items():
+                molecular_formula = molecular_formula + str(key) + str(value)
+            molcules.append(molecular_formula)
+
+    cnt = Counter(molcules)
+    cluster_occurence = []      
+    cluster_labels = [] 
+    for char, count in cnt.items(): 
+        cluster_occurence.append(count)
+        char = re.sub("(?<!1)1(?!1)", "", char)
+        char = ChemFormula(char).unicode 
+        cluster_labels.append(char)
+
+    molecules_frame = pd.DataFrame({'occurence':cluster_occurence, 'cluster':cluster_labels}).sort_values(by=["occurence"], ascending=False)
+    
+    return molecules_frame
+
+def filter_clusters_atom_composition(trajectory, timestep):
+    """
+    Returns the cluster classification with occurences in a given timestep of
+    a cluster data trajectory
+
+    :param trajectory: cluster data trajectory
+    :type dataframe: dataframe
+    :param timestep: frame number
+    :type timestep: int
+    :return: classification and occurence of cluster types
+    :rtype: dataframe
+    """
+    atom_mapping = {'O':(63,), 
+                    'H':(64,700), 
+                    'Li':(348,), 
+                    'N':(694,), 
+                    'C':(695,696)}
+
+    df = trajectory[timestep]
+    clusters = filter_clusters_unique_frame(df)
+    molcules = []
+    for cluster in clusters: 
+        filtered_df = df.query('Cluster ==' + str(cluster))
+        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < 300:
+            cluster_typing = []
+            atoms = filtered_df["Type"].values
+            for atom in atoms: 
+                for element in atom_mapping:
+                    for value in atom_mapping[element]:
+                        if atom == value: 
+                            cluster_typing.append(element)
+            classified_cluster = Counter(sorted(cluster_typing))
+            molecular_formula = ''
+            for key, value in classified_cluster.items():
+                molecular_formula = molecular_formula + str(key) + str(value)
+            molcules.append(molecular_formula)
+
+    cnt = Counter(molcules)
+    cluster_occurence = []      
+    cluster_labels = [] 
+    for char, count in cnt.items(): 
+        cluster_occurence.append(count)
+        char = re.sub("(?<!1)1(?!1)", "", char)
+        char = ChemFormula(char).unicode 
+        cluster_labels.append(char)
+
+    molecules_frame = pd.DataFrame({'occurence':cluster_occurence, 'cluster':cluster_labels}).sort_values(by=["occurence"], ascending=False)
+    
+    return molecules_frame
