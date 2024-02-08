@@ -450,7 +450,7 @@ def filter_clusters_atom_composition_unique_frame(dataframe):
     cluster_labels = [] 
     for char, count in cnt.items(): 
         cluster_occurence.append(count)
-        char = re.sub("(?<!1)1(?!1)", "", char)
+        char = re.sub("(?<!\d)1(?!\d)", "", char)
         char = ChemFormula(char).unicode 
         cluster_labels.append(char)
 
@@ -502,7 +502,7 @@ def filter_clusters_atom_composition(trajectory, timestep, limit=300):
     cluster_labels = [] 
     for char, count in cnt.items(): 
         cluster_occurence.append(count)
-        char = re.sub("(?<!1)1(?!1)", "", char)
+        char = re.sub("(?<!\d)1(?!\d)", "", char)
         char = ChemFormula(char).unicode 
         cluster_labels.append(char)
 
