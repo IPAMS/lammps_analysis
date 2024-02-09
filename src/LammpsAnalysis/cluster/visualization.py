@@ -125,7 +125,7 @@ def plot_boxplot_cluster_sizes_trajectory(trajectory, limit = 40, step=10, offse
     sc = sns.boxplot(result[result['count'] < limit], x='count', y='timestep', hue='timestep', palette='viridis', orient="h", ax=ax)
     sc.set_xlabel('atom count in clusters')
     sc.set_ylabel('timestep')
-    sns.stripplot(result[result['count'] < limit],  x='count', y='timestep', size=4, orient="h", ax=ax, color="#824055", dodge=True, legend=False)
+    sns.stripplot(result[result['count'] < limit],  x='count', y='timestep', size=4, orient="h", ax=ax, color="#a1546c", dodge=True, legend=False)
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
@@ -161,7 +161,7 @@ def plot_boxplot_cluster_masses_trajectory(trajectory, limit = 200, step=10, off
     
     sc.set_xlabel('cluster mass in Da')
     sc.set_ylabel('timestep')
-    sns.stripplot(result[result['mass'] < limit],  x='mass', y='timestep', size=4, orient="h", ax=ax, color="#824055", dodge=True, legend=False)
+    sns.stripplot(result[result['mass'] < limit],  x='mass', y='timestep', size=4, orient="h", ax=ax, color="#a1546c", dodge=True, legend=False)
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
