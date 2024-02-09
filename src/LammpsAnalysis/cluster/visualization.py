@@ -436,7 +436,7 @@ def animate_radial_distribution(trajectory, wall_type, animation_range, output, 
         radial_distribution_histogram(trajectory, i, wall_type, ax, limit, wall_vector)
 
     # creating animation
-    animation = FuncAnimation(fig,make_frame,frames=len(x))
+    animation = FuncAnimation(fig,make_frame,frames=x) 
     plt.close()
 
     from matplotlib.animation import PillowWriter
@@ -562,7 +562,7 @@ def animate_cluster_composition(trajectory, animation_range, output, limit = 300
         plot_cluster_composition_single_frame(trajectory, i, ax, limit)
 
     # creating animation
-    animation = FuncAnimation(fig,make_frame,frames=len(x))
+    animation = FuncAnimation(fig,make_frame,frames=x)
     plt.close()
 
     from matplotlib.animation import PillowWriter
