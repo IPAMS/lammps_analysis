@@ -238,6 +238,16 @@ def inflection_points(kes):
     infls = np.where(np.diff(np.sign(smooth_d2)))[0]
     return infls
 
+def collision_point(trajectory, wall_type):
+    # smooth
+    kes = generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
+    smooth = gaussian_filter1d(kes, 35, mode='nearest')
+    # compute second derivative
+    smooth_d2 = np.gradient(np.gradient(smooth))
+    # find switching points
+    infls = np.where(np.diff(np.sign(smooth_d2)))[0]
+    return infls[0]
+
 def get_all_cluster_distributions_in_space(trajectory, timestep):
     """
     Computes all center-of-mass positions and the respective mass 
