@@ -25,7 +25,7 @@ def plot_cluster_count_trajectory(trajectory):
     ax.set_ylabel('cluster count')
     plt.show()
 
-    return ax
+    return ax, fig
 
 
 def plot_droplet_kinetic_energy_timeseries(trajectory, wall_type, collision_limit=5):
@@ -62,7 +62,7 @@ def plot_droplet_kinetic_energy_timeseries(trajectory, wall_type, collision_limi
     mark_inset(ax, ax2, loc1=2, loc2=4, fc="none", ec="0.5")
     plt.show()
 
-    return ax, ax2
+    return ax, ax2, fig
 
 def plot_cluster_distribution(trajectory, timestep, savefig=False):    
     """
@@ -80,6 +80,8 @@ def plot_cluster_distribution(trajectory, timestep, savefig=False):
     coms, masses, clusters = cl_analysis.get_all_cluster_distributions_in_space(trajectory, timestep)
     reldata = pd.DataFrame({'x':coms[:,0], 'y':coms[:,1], 'z':coms[:,2], 'mass':np.round(masses,3), 'cluster':np.round(clusters,0)})
 
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
     sc = sns.scatterplot(reldata, x='x', y='y', hue='cluster', size='mass', palette="magma", legend='full', size_norm=matplotlib.colors.LogNorm())
 
     box = sc.get_position()
@@ -93,7 +95,7 @@ def plot_cluster_distribution(trajectory, timestep, savefig=False):
         plt.savefig('cluster_distribution.pdf', bbox_inches='tight')
 
     plt.show()
-    return sc
+    return sc, fig
 
 def plot_boxplot_cluster_sizes_trajectory(trajectory, limit = 40, step=10, offset=0):
     """
@@ -129,7 +131,7 @@ def plot_boxplot_cluster_sizes_trajectory(trajectory, limit = 40, step=10, offse
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
-    return sc
+    return sc, fig
 
 def plot_boxplot_cluster_masses_trajectory(trajectory, limit = 200, step=10, offset=0):
     """
@@ -165,7 +167,7 @@ def plot_boxplot_cluster_masses_trajectory(trajectory, limit = 200, step=10, off
     sns.despine(trim=True, left=True)
     sc.legend(framealpha=1, title='timestep')
     plt.show()
-    return sc
+    return sc, fig
 
 def plot_histogram_atoms_cluster(trajectory, timestep):
     """
@@ -192,7 +194,7 @@ def plot_histogram_atoms_cluster(trajectory, timestep):
     ax2.set_facecolor('white')
     sc2.set_ylabel('count #')
     plt.show()
-    return sc, sc2
+    return sc, sc2, fig
 
 def plot_histogram_mass_cluster(trajectory, timestep):
     """
@@ -221,7 +223,7 @@ def plot_histogram_mass_cluster(trajectory, timestep):
     ax2.set_facecolor('white')
     sc2.set_ylabel('count #')
     plt.show()
-    return sc, sc2
+    return sc, sc2, fig
 
 
 def plot_distribution_cluster_size_timeseries(trajectory, limit=40, step=10, offset=0):
@@ -254,7 +256,7 @@ def plot_distribution_cluster_size_timeseries(trajectory, limit=40, step=10, off
     sc.set_ylabel('count #')
     sns.move_legend(sc, "upper right", ncol=5, frameon=True)
     plt.show()
-    return sc
+    return sc, fig
 
 
 def circular_hist(ax, x, bins=16, density=True, offset=0, gaps=True):
@@ -407,7 +409,7 @@ def plot_radial_distribution(trajectory, timestep, wall_type, limit, wall_vector
     fig, ax = plt.subplots(1, 1, subplot_kw=dict(projection='polar'))
     circular_hist(ax, angles)
     plt.show()
-    return ax
+    return ax, fig
 
 
 def animate_radial_distribution(trajectory, wall_type, animation_range, output, limit, wall_vector=np.array([1, 0])):
@@ -472,7 +474,7 @@ def plot_series_cluster_count(trajectories, voltages, timestep):
     ax.set_ylabel('average cluster count')
     plt.show()
 
-    return ax
+    return ax, fig
 
 def plot_series_cluster_count_whole_trajectory(trajectories, voltages):
     """
@@ -503,7 +505,7 @@ def plot_series_cluster_count_whole_trajectory(trajectories, voltages):
     ax.set_ylabel('average cluster count')
     plt.show()
 
-    return ax
+    return ax, fig
 
 def plot_series_collision_points(trajectories, voltages, wall_type):
     """
@@ -532,16 +534,17 @@ def plot_series_collision_points(trajectories, voltages, wall_type):
     ax.set_ylabel('timestep of collision')
     plt.show()
 
-    return ax
+    return ax, fig
 
 def plot_cluster_composition(trajectory, timestep, limit = 300):
 
     clusters = cl_analysis.filter_clusters_atom_composition(trajectory, timestep, limit)
+    fig, ax = plt.subplots(1, 1)
     ax = sns.barplot(clusters, x="occurence", y="cluster", orient="y")
     ax.set_xlabel("occurence")
     plt.show()
 
-    return ax 
+    return ax, fig
 
 def plot_cluster_composition_single_frame(trajectory, timestep, ax, limit = 300):
 
