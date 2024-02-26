@@ -338,15 +338,12 @@ def scattering_angles(trajectory, timestep, wall_type, limit, wall_vector=np.arr
     :return: scattering angles of all clusters
     :rtype: list
     """
-    kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
-    infls = cl_analysis.inflection_points(kes)
-    collision_point = infls[0]
     selected_ts = trajectory[timestep].to_pandas()
     clusters = cl_analysis.filter_clusters_unique_frame(selected_ts)
     vels = []
 
     for cluster in clusters: 
-        vel = cl_analysis.cluster_center_of_velocity_direction(selected_ts, cluster, True)[0:2] # projection on xy
+        vel = cl_analysis.cluster_center_of_velocity_direction(selected_ts, cluster, True)[::2] # projection on xz
         mass = cl_analysis.cluster_mass(selected_ts, cluster)
         vel_mag = np.linalg.norm(np.array(vel))
         if mass < limit:
