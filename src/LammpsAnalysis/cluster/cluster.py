@@ -78,7 +78,7 @@ def read_cluster_data(filename, frames_to_read):
     properties, header_string, atom_count = read_header(filename)
     with open_fct(filename, mode='rt') as fh:
         for line in fh:
-            if str(atom_count) in line:
+            if str(atom_count) == line.strip():
                 #a new timestep has begun
                 n_frames += 1
                 time += 1
