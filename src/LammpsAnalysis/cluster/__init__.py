@@ -13,5 +13,7 @@ from . import analysis
 from .analysis import *
 from . import visualization
 from .visualization import *
+from . import simulation_evaluation
+from .simulation_evaluation import *
 
-__all__ = ['cluster', 'analysis', 'visualization']
+__all__ = ['cluster', 'analysis', 'visualization', 'simulation_evaluation']
