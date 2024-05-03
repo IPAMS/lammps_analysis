@@ -431,11 +431,11 @@ def filter_clusters_atom_composition_unique_frame(dataframe):
     :return: classification and occurence of cluster types
     :rtype: dataframe
     """
-    atom_mapping = {'O':(63,), 
-                    'H':(64,700), 
-                    'Li':(348,), 
-                    'N':(694,), 
-                    'C':(695,696)}
+    atom_mapping = {'O':(63,1), 
+                    'H':(64,700,2,7), 
+                    'Li':(348,3), 
+                    'N':(694,4), 
+                    'C':(695,696,5,6)}
 
     clusters = filter_clusters_unique_frame(dataframe)
     molcules = []
@@ -482,11 +482,11 @@ def filter_clusters_atom_composition(trajectory, timestep, limit=300):
     :return: classification and occurence of cluster types
     :rtype: dataframe
     """
-    atom_mapping = {'O':(63,), 
-                    'H':(64,700), 
-                    'Li':(348,), 
-                    'N':(694,), 
-                    'C':(695,696)}
+    atom_mapping = {'O':(63,1), 
+                    'H':(64,700,2,7), 
+                    'Li':(348,3), 
+                    'N':(694,4), 
+                    'C':(695,696,5,6)}
 
     df = trajectory[timestep].to_pandas()
     clusters = filter_clusters_unique_frame(df)
