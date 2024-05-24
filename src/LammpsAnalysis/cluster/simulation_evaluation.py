@@ -12,32 +12,40 @@ import LammpsAnalysis.cluster.cluster as cl
 import matplotlib.pyplot as plt
 
 
+def eval_cluster_mean(index):
+
+    def cluster_mean(data):
+        nonlocal index
+        for variation_index, reprod_sum in enumerate(data[index,:]):
+            stddev = np.std(reprod_sum)
+            count = np.mean(reprod_sum)
+            data[index, variation_index] = [count, stddev]
+    return cluster_mean
+
 def cluster_count(trajectory):
     frame_counts = []
     for frame in trajectory: 
         count = cl_analysis.filter_clusters_unique_frame(frame.to_pandas())
         frame_counts.append(np.size(count))
-    stddev = np.std(frame_counts)
-    count = np.mean(frame_counts)
+    #stddev = np.std(frame_counts)
+    #count = np.mean(frame_counts)
+    return np.asarray(frame_counts)
 
-    return [count, stddev]
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111)
-    # lineObj = ax.errorbar(voltages, counts, yerr=stddevs, fmt='x', capsize=5)
-    # ax.set_xlabel('voltage in V')
-    # ax.set_ylabel('average cluster count')
-    # plt.show()
+    #return [count, stddev]
 
 def collision_point(trajectory, wall_type):
     kes = cl_analysis.generate_droplet_kinetic_energy_timeseries(trajectory, wall_type)
     infls = cl_analysis.inflection_points(kes)
     return infls[0]
 
-def evaluate_simulation_run(filenames, voltages, functions, frames_to_read, wall_type):
+def evaluate_simulation_run(filenames, functions, post_functions, frames_to_read, reproduction_count, wall_type):
     function_count = len(functions)
     file_count = len(filenames)
-    function_results = np.empty((function_count,file_count), dtype=object)
+    post_functions_count = len(post_functions)
+    function_results = np.empty((function_count,file_count//reproduction_count), dtype=object)
+
+    repro_counter = 0
+    file_res_counter = 0
     for counter, file in enumerate(filenames): 
         data = cl.read_cluster_data(file, frames_to_read)
         for index, function in enumerate(functions):
@@ -45,7 +53,23 @@ def evaluate_simulation_run(filenames, voltages, functions, frames_to_read, wall
                 result = function(data, wall_type)
             else:
                 result = function(data)
-            function_results[index, counter] = result
+            if np.any(function_results[index, file_res_counter]):
+                function_results[index, file_res_counter] = function_results[index, file_res_counter] + result
+            else:
+                function_results[index, file_res_counter] = result
+                
+
+            repro_counter = repro_counter+1
+            if repro_counter > reproduction_count+1:
+                repro_counter = 0
+                for id, element in enumerate(function_results[:, file_res_counter]):
+                    function_results[id, file_res_counter] = element/reproduction_count
+                file_res_counter = file_res_counter + 1
+    
+    
+    for postindex, postfunction in enumerate(post_functions):           
+        postfunction(function_results)
+    
     return function_results
 
 
@@ -59,6 +83,8 @@ def plot_cluster_count(data, index):
     ax.set_ylabel('average cluster count')
     plt.show()
 
+    return ax, fig
+
 
 def plot_collision_point(data, index):
     fig = plt.figure()
@@ -68,4 +94,5 @@ def plot_collision_point(data, index):
     ax.set_ylabel('timestep of collision')
     plt.show()
 
+    return ax, fig
 
