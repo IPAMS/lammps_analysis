@@ -20,12 +20,12 @@ def plot_cluster_count_trajectory(trajectory):
     cluster_count = cl_analysis.cluster_count_trajectory(trajectory)
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot(cluster_count)
+    data, = ax.plot(cluster_count)
     ax.set_xlabel('timestep')
     ax.set_ylabel('cluster count')
     plt.show()
 
-    return ax, fig
+    return ax, fig, data
 
 
 def plot_droplet_kinetic_energy_timeseries(trajectory, wall_type, collision_limit=5):
