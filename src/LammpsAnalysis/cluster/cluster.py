@@ -29,13 +29,18 @@ def read_header(filename):
 
     line_header = ''
     atom_count = 0
+    basename, ext = os.path.splitext(filename)
+    if ext == ".gz":
+        open_fct = gzip.open
+    else:
+        open_fct = open
 
-    with open(filename) as file:
+    with open_fct(filename, mode='rt') as file:
         for line in islice(file, 0, 1):
             atom_count = int(line)
 
     pattern = re.compile(r'([a-z,_]+)')
-    with open(filename) as file:
+    with open_fct(filename, mode='rt') as file:
         for line in islice(file, 1, 2):
             line_header = line
             split_line = line.split("Properties=")[1]
