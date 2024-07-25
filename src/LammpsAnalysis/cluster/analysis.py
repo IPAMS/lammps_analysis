@@ -422,7 +422,7 @@ def cluster_center_of_velocity_direction(dataframe, cluster_number, si=False):
         return [com_vx*1e-5, com_vy*1e-5, com_vz*1e-5]
     
 
-def filter_clusters_atom_composition_unique_frame(dataframe):
+def filter_clusters_atom_composition_unique_frame(dataframe, wall_type):
     """
     Returns the cluster classification with occurences of a single cluster data frame
 
@@ -441,7 +441,7 @@ def filter_clusters_atom_composition_unique_frame(dataframe):
     molcules = []
     for cluster in clusters: 
         filtered_df = dataframe.query('Cluster ==' + str(cluster))
-        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < 300:
+        if wall_type not in filtered_df["Type"] and filtered_df.shape[0] < 300:
             cluster_typing = []
             atoms = filtered_df["Type"].values
             for atom in atoms: 
@@ -468,7 +468,7 @@ def filter_clusters_atom_composition_unique_frame(dataframe):
     
     return molecules_frame
 
-def filter_clusters_atom_composition(trajectory, timestep, limit=300):
+def filter_clusters_atom_composition(trajectory, timestep, wall_type, limit=300):
     """
     Returns the cluster classification with occurences in a given timestep of
     a cluster data trajectory with atom count limit
@@ -493,7 +493,7 @@ def filter_clusters_atom_composition(trajectory, timestep, limit=300):
     molcules = []
     for cluster in clusters: 
         filtered_df = df.query('Cluster ==' + str(cluster))
-        if 907 not in filtered_df["Type"] and filtered_df.shape[0] < limit:
+        if wall_type not in filtered_df["Type"] and filtered_df.shape[0] < limit:
             cluster_typing = []
             atoms = filtered_df["Type"].values
             for atom in atoms: 
