@@ -31,17 +31,28 @@ def fragment_spectra(trajectory, frame, limit = 300):
     clusters = cl_analysis.filter_clusters_atom_composition(trajectory, frame, limit)
     return clusters 
 
+## TODO: Scattering angle 
 
 ### Expression of specific evaluation functions for accumalting
 
-def sum_results_cluster_count(input_data, result_data, index, frame):
+def sum_results_cluster_count(input_data, result_data, index, file_res_counter):
     result = cluster_count(input_data)
-    if np.any(result_data[index,0]):
-        result_data[index,0] = result_data[index,0] + result
+    if np.any(result_data[index,file_res_counter]):
+        result_data[index,file_res_counter] = result_data[index,file_res_counter] + result
     else:
-        result_data[index,0] = result
+        result_data[index,file_res_counter] = result
 
-    return result_data
+def sum_results_collision_point_walltype(wall_type):
+
+    def sum_results_collision_point(input_data, result_data, index, file_res_counter):
+        nonlocal wall_type
+        result = collision_point(input_data, wall_type)
+        if np.any(result_data[index,file_res_counter]):
+            result_data[index,file_res_counter] = result_data[index,file_res_counter] + result
+        else:
+            result_data[index,file_res_counter] = result
+
+    return sum_results_collision_point
 
 def sum_results_fragment_spectra_timstep(frame):
     
@@ -78,6 +89,19 @@ def eval_cluster_mean(index):
             data[index, variation_index] = [count, stddev]
     return cluster_mean
 
+def eval_cluster_mean_after_collision(index_cluster, index_collision):
+
+    def cluster_mean(data):
+        nonlocal index_cluster
+        nonlocal index_collision
+        
+        collision_point = np.mean(data[index_collision,:])
+        for variation_index, reprod_sum in enumerate(data[index_cluster,:]):
+            stddev = np.std(reprod_sum[collision_point:])
+            count = np.mean(reprod_sum[collision_point:])
+            data[index_cluster, variation_index] = [count, stddev]
+    return cluster_mean
+
 
 ### Accumelating base function 
 
@@ -94,6 +118,34 @@ def accumelate_observables(filenames, functions, post_functions, frames_to_read=
         postfunction(function_results)
     
     return function_results
+
+### Averaging base function 
+
+def average_observables(filenames, functions, post_functions, reproduction_count, frames_to_read=None):
+    function_count = len(functions)
+    file_count = len(filenames)
+    function_results = np.empty((function_count,file_count//reproduction_count), dtype=object)
+
+    repro_counter = 0
+    file_res_counter = 0
+    for counter, file in enumerate(filenames): 
+        data = cl.read_cluster_data(file, frames_to_read)
+        for index, function in enumerate(functions):
+            function(data, function_results, index, file_res_counter)
+            
+            repro_counter = repro_counter+1
+            if repro_counter >= reproduction_count:
+                repro_counter = 0
+                for id, element in enumerate(function_results[:, file_res_counter]):
+                    print(id, element, function_results[id, file_res_counter])
+                    function_results[id, file_res_counter] = element/reproduction_count
+                file_res_counter = file_res_counter + 1
+    
+    for postindex, postfunction in enumerate(post_functions):           
+        postfunction(function_results)
+
+    return function_results
+
 
 # def evaluate_simulation_run(filenames, functions, post_functions, frames_to_read, reproduction_count, wall_type):
 #     function_count = len(functions)
@@ -147,12 +199,12 @@ def accumelate_observables(filenames, functions, post_functions, frames_to_read=
 #     return function_results
 
 
-def plot_cluster_count(data, index):
+def plot_cluster_count(data, index, voltages):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     counts = [item[0] for item in data[index, :]]
     stdev = [item[1] for item in data[index, :]]
-    lineObj = ax.errorbar([10,20,30,40], counts, yerr=stdev, fmt='x', capsize=5)
+    lineObj = ax.errorbar(voltages, counts, yerr=stdev, fmt='x', capsize=5)
     ax.set_xlabel('voltage in V')
     ax.set_ylabel('average number of observed cluster')
     plt.show()
