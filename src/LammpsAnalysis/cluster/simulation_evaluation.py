@@ -13,16 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def eval_cluster_mean(index):
-
-    def cluster_mean(data):
-        nonlocal index
-        print(data)
-        for variation_index, reprod_sum in enumerate(data[index,:]):
-            stddev = np.std(reprod_sum)
-            count = np.mean(reprod_sum)
-            data[index, variation_index] = [count, stddev]
-    return cluster_mean
+### Basic analysis functions
 
 def cluster_count(trajectory):
     frame_counts = []
@@ -40,56 +31,120 @@ def fragment_spectra(trajectory, frame, limit = 300):
     clusters = cl_analysis.filter_clusters_atom_composition(trajectory, frame, limit)
     return clusters 
 
-def evaluate_simulation_run(filenames, functions, post_functions, frames_to_read, reproduction_count, wall_type):
-    function_count = len(functions)
-    file_count = len(filenames)
-    post_functions_count = len(post_functions)
-    function_results = np.empty((function_count,file_count//reproduction_count), dtype=object)
 
-    repro_counter = 0
-    file_res_counter = 0
-    for counter, file in enumerate(filenames): 
-        data = cl.read_cluster_data(file, frames_to_read)
-        for index, function in enumerate(functions):
-            if function == collision_point:
-                result = function(data, wall_type)
-            else:
-                result = function(data)
-            if np.any(function_results[index, file_res_counter]):
-                function_results[index, file_res_counter] = function_results[index, file_res_counter] + result
-            else:
-                function_results[index, file_res_counter] = result
-                
-            repro_counter = repro_counter+1
-            if repro_counter >= reproduction_count:
-                repro_counter = 0
-                for id, element in enumerate(function_results[:, file_res_counter]):
-                    function_results[id, file_res_counter] = element/reproduction_count
-                file_res_counter = file_res_counter + 1
+### Expression of specific evaluation functions for accumalting
+
+def sum_results_cluster_count(input_data, result_data, index, frame):
+    result = cluster_count(input_data)
+    if np.any(result_data[index,0]):
+        result_data[index,0] = result_data[index,0] + result
+    else:
+        result_data[index,0] = result
+
+    return result_data
+
+def sum_results_fragment_spectra_timstep(frame):
     
-    for postindex, postfunction in enumerate(post_functions):           
-        postfunction(function_results)
+    def sum_results_fragment_spectra(input_data, result_data, index):
+        nonlocal frame
+        result = fragment_spectra(input_data, frame)
+        if np.any(result_data[index,0]):
+            result_data[index,0] = pd.concat([result_data[index,0], result]).groupby('cluster')['occurence'].sum().reset_index()
+        else:
+            result_data[index,0] = result
 
-    return function_results
+    return sum_results_fragment_spectra
 
-def evaluate_timeframe_sums(filenames, functions, post_functions, wall_type, timestep, frames_to_read=None):
+
+### Expression of specific evaluation functions for averaging 
+
+
+def average_results(input_data, result_data):
+
+    return result_data
+
+
+### Post-Functions 
+
+
+def eval_cluster_mean(index):
+
+    def cluster_mean(data):
+        nonlocal index
+        print(data)
+        for variation_index, reprod_sum in enumerate(data[index,:]):
+            stddev = np.std(reprod_sum)
+            count = np.mean(reprod_sum)
+            data[index, variation_index] = [count, stddev]
+    return cluster_mean
+
+
+### Accumelating base function 
+
+def accumelate_observables(filenames, functions, post_functions, frames_to_read=None):
     function_count = len(functions)
     function_results = np.empty((function_count,1), dtype=object)
 
     for counter, file in enumerate(filenames): 
         data = cl.read_cluster_data(file, frames_to_read)
         for index, function in enumerate(functions):
-           
-            result = function(data, timestep)
-            if np.any(function_results[index,0]):
-                function_results[index,0] = pd.concat([function_results[index,0], result]).groupby('cluster')['occurence'].sum().reset_index()
-            else:
-                function_results[index,0] = result   
+            function(data, function_results, index)
 
     for postindex, postfunction in enumerate(post_functions):           
         postfunction(function_results)
     
     return function_results
+
+# def evaluate_simulation_run(filenames, functions, post_functions, frames_to_read, reproduction_count, wall_type):
+#     function_count = len(functions)
+#     file_count = len(filenames)
+#     post_functions_count = len(post_functions)
+#     function_results = np.empty((function_count,file_count//reproduction_count), dtype=object)
+
+#     repro_counter = 0
+#     file_res_counter = 0
+#     for counter, file in enumerate(filenames): 
+#         data = cl.read_cluster_data(file, frames_to_read)
+#         for index, function in enumerate(functions):
+#             if function == collision_point:
+#                 result = function(data, wall_type)
+#             else:
+#                 result = function(data)
+#             if np.any(function_results[index, file_res_counter]):
+#                 function_results[index, file_res_counter] = function_results[index, file_res_counter] + result
+#             else:
+#                 function_results[index, file_res_counter] = result
+                
+#             repro_counter = repro_counter+1
+#             if repro_counter >= reproduction_count:
+#                 repro_counter = 0
+#                 for id, element in enumerate(function_results[:, file_res_counter]):
+#                     function_results[id, file_res_counter] = element/reproduction_count
+#                 file_res_counter = file_res_counter + 1
+    
+#     for postindex, postfunction in enumerate(post_functions):           
+#         postfunction(function_results)
+
+#     return function_results
+
+# def evaluate_timeframe_sums(filenames, functions, post_functions, wall_type, timestep, frames_to_read=None):
+#     function_count = len(functions)
+#     function_results = np.empty((function_count,1), dtype=object)
+
+#     for counter, file in enumerate(filenames): 
+#         data = cl.read_cluster_data(file, frames_to_read)
+#         for index, function in enumerate(functions):
+           
+#             result = function(data, timestep)
+#             if np.any(function_results[index,0]):
+#                 function_results[index,0] = pd.concat([function_results[index,0], result]).groupby('cluster')['occurence'].sum().reset_index()
+#             else:
+#                 function_results[index,0] = result   
+
+#     for postindex, postfunction in enumerate(post_functions):           
+#         postfunction(function_results)
+    
+#     return function_results
 
 
 def plot_cluster_count(data, index):
