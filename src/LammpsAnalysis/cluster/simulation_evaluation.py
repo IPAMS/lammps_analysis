@@ -94,7 +94,7 @@ def eval_cluster_mean_after_collision(index_cluster, index_collision):
         nonlocal index_cluster
         nonlocal index_collision
         
-        collision_point =np.round(np.mean(data[index_collision,:]))
+        collision_point = int(np.rint(np.mean(data[index_collision,:])))
         for variation_index, reprod_sum in enumerate(data[index_cluster,:]):
             stddev = np.std(reprod_sum[collision_point:])
             count = np.mean(reprod_sum[collision_point:])
@@ -131,14 +131,12 @@ def average_observables(filenames, functions, post_functions, reproduction_count
         data = cl.read_cluster_data(file, frames_to_read)
         for index, function in enumerate(functions):
             function(data, function_results, index, file_res_counter)
-            print(counter, index, function_results[index,file_res_counter])
         repro_counter = repro_counter+1 
 
         if repro_counter >= reproduction_count:
                 repro_counter = 0
                 for id, element in enumerate(function_results[:, file_res_counter]):
                     function_results[id, file_res_counter] = element/reproduction_count
-                    print(element, function_results[id, file_res_counter])
                 file_res_counter = file_res_counter + 1
     
     for postindex, postfunction in enumerate(post_functions):           
@@ -152,7 +150,7 @@ def plot_cluster_count(data, index, voltages):
     ax = fig.add_subplot(111)
     counts = [item[0] for item in data[index, :]]
     stdev = [item[1] for item in data[index, :]]
-    lineObj = ax.errorbar(voltages, counts, yerr=stdev, fmt='x', capsize=5)
+    lineObj = ax.errorbar(voltages, counts, yerr=stdev, fmt='d', capsize=5)
     ax.set_xlabel('voltage in V')
     ax.set_ylabel('average number of observed cluster')
     plt.show()
