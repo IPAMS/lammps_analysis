@@ -8,6 +8,7 @@ import pandas as pd
 import re
 from chemformula import ChemFormula
 import LammpsAnalysis.cluster.analysis as cl_analysis
+import LammpsAnalysis.cluster.visualization as cl_vis
 import LammpsAnalysis.cluster.cluster as cl
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -31,9 +32,11 @@ def fragment_spectra(trajectory, frame, limit = 300):
     clusters = cl_analysis.filter_clusters_atom_composition(trajectory, frame, limit)
     return clusters 
 
-## TODO: Scattering angle 
+def scattering_angles(trajectory, frame, wall_type, wall_vector=np.array([1, 0]), limit=300):
+    angles = cl_vis.scattering_angles(trajectory, frame, wall_type, limit, wall_vector)
+    return angles
 
-### Expression of specific evaluation functions for accumalting
+### Expression of specific evaluation functions
 
 def sum_results_cluster_count(input_data, result_data, index, file_res_counter):
     result = cluster_count(input_data)
@@ -54,6 +57,19 @@ def sum_results_collision_point_walltype(wall_type):
 
     return sum_results_collision_point
 
+def sum_results_scattering_angles_timstep_walltype(frame, wall_type):
+    
+    def sum_results_scattering_angles(input_data, result_data, index):
+        nonlocal frame
+        nonlocal wall_type
+        result = scattering_angles(input_data, frame, wall_type)
+        if np.any(result_data[index,0]):
+            result_data[index,0] = np.concatenate((result_data[index,0], result), axis=0)
+        else:
+            result_data[index,0] = result
+
+    return sum_results_scattering_angles
+
 def sum_results_fragment_spectra_timstep(frame):
     
     def sum_results_fragment_spectra(input_data, result_data, index):
@@ -67,16 +83,7 @@ def sum_results_fragment_spectra_timstep(frame):
     return sum_results_fragment_spectra
 
 
-### Expression of specific evaluation functions for averaging 
-
-
-def average_results(input_data, result_data):
-
-    return result_data
-
-
 ### Post-Functions 
-
 
 def eval_cluster_mean(index):
 
@@ -144,6 +151,7 @@ def average_observables(filenames, functions, post_functions, reproduction_count
 
     return function_results
 
+### Plotting functions
 
 def plot_cluster_count(data, index, voltages):
     fig = plt.figure()
@@ -185,6 +193,14 @@ def plot_cluster_composition_comparison(data1, index1, data2, index2, comparison
     fig, ax = plt.subplots(1, 1)
     ax = sns.barplot(data.sort_values(by=['occurence'], ascending=False), x="occurence", y="cluster", orient="y", hue='Wall')
     ax.set_xlabel("occurence")
+    plt.show()
+
+    return ax, fig
+
+def plot_scattering_angles(data, index):
+    angles = data[index, 0]
+    fig, ax = plt.subplots(1, 1, subplot_kw=dict(projection='polar'))
+    cl_vis.circular_hist(ax, angles)
     plt.show()
 
     return ax, fig
