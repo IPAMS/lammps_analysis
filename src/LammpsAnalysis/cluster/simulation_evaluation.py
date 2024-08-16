@@ -158,10 +158,10 @@ def plot_cluster_count(data, index, voltages):
     return ax, fig
 
 
-def plot_collision_point(data, index):
+def plot_collision_point(data, index, voltages):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.plot([10,20,30,40,50,60,70,80,90,100], data[index, :], '--x')
+    ax.plot(voltages, data[index, :], '--x')
     ax.set_xlabel('voltage in V')
     ax.set_ylabel('timestep of collision')
     plt.show()
@@ -171,6 +171,19 @@ def plot_collision_point(data, index):
 def plot_cluster_composition(data, index):
     fig, ax = plt.subplots(1, 1)
     ax = sns.barplot(data[index, 0].sort_values(by=['occurence'], ascending=False), x="occurence", y="cluster", orient="y")
+    ax.set_xlabel("occurence")
+    plt.show()
+
+    return ax, fig
+
+def plot_cluster_composition_comparison(data1, index1, data2, index2, comparison_type, classifier1, classifier2):
+    clusters1 = data1[index1, 0]
+    clusters2 = data2[index2, 0]
+    clusters1[comparison_type] = classifier1
+    clusters2[comparison_type] = classifier2
+    data = pd.concat([clusters1, clusters2])
+    fig, ax = plt.subplots(1, 1)
+    ax = sns.barplot(data.sort_values(by=['occurence'], ascending=False), x="occurence", y="cluster", orient="y", hue='Wall')
     ax.set_xlabel("occurence")
     plt.show()
 
