@@ -22,8 +22,8 @@ def filter_radius(trajectory, radius):
 	buf = []
 	for timestep in range(n_frames):
 		ts_radii, center = radii_around_geometric_center(trajectory, timestep)
-
-		frame = trajectory[timestep].where(ts_radii < radius,drop=True)
+		selected = (ts_radii < radius).to_numpy()
+		frame = trajectory[timestep, selected ,:]
 		buf.append(frame)
 	return (buf)
 
