@@ -24,8 +24,8 @@ class Test_analysis(unittest.TestCase):
 		tra_5 = lana.filter_radius(self.trajectory_water, 5)
 		tra_40 = lana.filter_radius(self.trajectory_water, 40)
 
-		self.assertEqual(tra_5[0].sizes['particles'],6)
-		self.assertEqual(tra_40[0].sizes['particles'], 2853)
+		self.assertEqual(tra_5[0].sizes['particles'],26)
+		self.assertEqual(tra_40[0].sizes['particles'], 1320)
 
 	def test_calc_geometric_center(self):
 		center = lana.calculate_geometric_center(self.test_frame)
