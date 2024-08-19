@@ -27,13 +27,58 @@ class Test_analysis(unittest.TestCase):
 		self.assertEqual(tra_5[0].sizes['particles'],26)
 		self.assertEqual(tra_40[0].sizes['particles'], 1320)
 
+	def test_filter_hemisphere(self):
+		tra_x = lana.filter_hemisphere(self.trajectory_water, 'x')
+		tra_y = lana.filter_hemisphere(self.trajectory_water, 'y')
+		tra_z = lana.filter_hemisphere(self.trajectory_water, 'z')
+
+		self.assertEqual(tra_x[0][0].sizes['particles'], 740)
+		self.assertEqual(tra_x[1][0].sizes['particles'], 580)
+
+		self.assertEqual(tra_y[0][0].sizes['particles'], 625)
+		self.assertEqual(tra_y[1][0].sizes['particles'], 695)
+
+		self.assertEqual(tra_z[0][0].sizes['particles'], 673)
+		self.assertEqual(tra_z[1][0].sizes['particles'], 647)
+
+		center = lana.calculate_geometric_center(self.trajectory_water[0])
+
+		cx = center[0].values
+		for part in tra_x[0][0]:
+			self.assertTrue(part.loc['x'].values < cx)
+			self.assertFalse(part.loc['x'].values > cx)
+
+		for part in tra_x[1][0]:
+			self.assertTrue(part.loc['x'].values > cx)
+			self.assertFalse(part.loc['x'].values < cx)
+
+		cy = center[1].values
+		for part in tra_y[0][0]:
+			self.assertTrue(part.loc['y'].values < cy)
+			self.assertFalse(part.loc['y'].values > cy)
+
+		for part in tra_y[1][0]:
+			self.assertTrue(part.loc['y'].values > cy)
+			self.assertFalse(part.loc['y'].values < cy)
+
+		cz = center[2].values
+		for part in tra_z[0][0]:
+			self.assertTrue(part.loc['z'].values < cz)
+			self.assertFalse(part.loc['z'].values > cz)
+
+		for part in tra_z[1][0]:
+			self.assertTrue(part.loc['z'].values > cz)
+			self.assertFalse(part.loc['z'].values < cz)
+
+
+
 	def test_calc_geometric_center(self):
 		center = lana.calculate_geometric_center(self.test_frame)
 		self.assertAlmostEqual(center[0], 0.2)
 		self.assertAlmostEqual(center[1], 2.0)
 		self.assertAlmostEqual(center[2], 20.0)
 
-	def test_raddi_around_geometric_center(self):
+	def test_radii_around_geometric_center(self):
 		preset_center = [1.0,2.0,3.0]
 		radii,center = lana.radii_around_geometric_center(self.trajectory_water,-1,center=preset_center)
 		n_test = 10

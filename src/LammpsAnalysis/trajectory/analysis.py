@@ -23,9 +23,34 @@ def filter_radius(trajectory, radius):
 	for timestep in range(n_frames):
 		ts_radii, center = radii_around_geometric_center(trajectory, timestep)
 		selected = (ts_radii < radius).to_numpy()
-		frame = trajectory[timestep, selected ,:]
+		frame = trajectory[timestep, selected , :]
 		buf.append(frame)
 	return (buf)
+
+def coordinate_index(direction):
+	if direction=='x':
+		return 0
+	elif direction=='y':
+		return 1
+	elif direction=='z':
+		return 2
+	else:
+		raise ValueError('illegal direction string / direction identifier')
+def filter_hemisphere(trajectory, direction='x'):
+	n_frames = trajectory.sizes['time']
+	buf = [[], []]
+	for timestep in range(n_frames):
+		ts_frame = trajectory[timestep]
+		coords = ts_frame.loc[:, direction]
+		center = calculate_geometric_center(ts_frame)[coordinate_index(direction)]
+		selected_smaller = (coords < center).to_numpy()
+		selected_larger = (coords > center).to_numpy()
+		frame_smaller = trajectory[timestep, selected_smaller , :]
+		frame_larger = trajectory[timestep, selected_larger, :]
+		buf[0].append(frame_smaller)
+		buf[1].append(frame_larger)
+
+	return buf
 
 
 # low level analysis methods:
