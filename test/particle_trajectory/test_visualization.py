@@ -24,12 +24,26 @@ class Test_analysis(unittest.TestCase):
 		plt.savefig(pt.join(self.test_result_path, 'test_test.pdf'), format='pdf')
 
 	def test_energy_timeseries(self):
-		lvisu.plot_energies_timeseries(self.trajectory_water,mode='average')
-		plt.savefig(pt.join(self.test_result_path, 'test_energy_timeseries_average.pdf'), format='pdf')
+		fig_avg = lvisu.plot_energies_timeseries(self.trajectory_water,mode='average')
+		fig_avg.savefig(pt.join(self.test_result_path, 'test_energy_timeseries_average.pdf'), format='pdf')
 
-		plt.figure()
-		lvisu.plot_energies_timeseries(self.trajectory_water,mode='sum')
-		plt.savefig(pt.join(self.test_result_path, 'test_energy_timeseries_sum.pdf'), format='pdf')
+		#plt.figure()
+		fig_sum = lvisu.plot_energies_timeseries(self.trajectory_water, mode='sum')
+		fig_sum.savefig(pt.join(self.test_result_path, 'test_energy_timeseries_sum.pdf'), format='pdf')
+
+	def test_droplet_thermalization_plot(self):
+		tra = self.trajectory
+		tra_water = ltra.filter_species_trajectory(tra, [63, 64])
+
+		fig_sum_x = lvisu.plot_energies_timeseries(self.trajectory_water, mode='sum', segmentation_mode='center_x')
+		fig_sum_x.savefig(pt.join(self.test_result_path, 'test_thermalization_x.pdf'), format='pdf')
+
+		fig_sum_y = lvisu.plot_energies_timeseries(self.trajectory_water, mode='average', segmentation_mode='center_y')
+		fig_sum_y.savefig(pt.join(self.test_result_path, 'test_thermalization_y.pdf'), format='pdf')
+
+		fig_sum_z = lvisu.plot_energies_timeseries(self.trajectory_water, mode='sum', segmentation_mode='center_z')
+		fig_sum_z.savefig(pt.join(self.test_result_path, 'test_thermalization_z.pdf'), format='pdf')
+
 
 	def test_radial_density(self):
 		tra = self.trajectory

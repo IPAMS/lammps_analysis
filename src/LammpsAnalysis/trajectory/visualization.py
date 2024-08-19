@@ -40,7 +40,8 @@ def plot_histogram_energy(frame, bins=100, col_name_pe='c_pe_all', col_name_ke='
 	plt.ylabel("# particles")
 
 
-def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all', col_name_ke='c_ke_all'):
+def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all', col_name_ke='c_ke_all',
+                             segmentation_mode='unsegmented'):
 	"""
 	Plots a line plot of the average or summed energies in a time series of
 	LAMMPS simulation uncompressed_trajectory frames
@@ -54,7 +55,13 @@ def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all',
 	:type col_name_pe: str
 	:param col_name_ke: data column name for the kinetic energy
 	:type col_name_ke: str
-	:return: none
+	:param segmentation_mode: Segmentation mode: The ion ensemble can be segmented into sub-ensembles for special
+		analysis (e.g. charged droplet thermalization analysis). Modes are:
+			* 'unsegmented' (default) - no segmentation
+			* 'center_x', 'center_y', 'center_z' segmentation in two halves, below the geometric center and above, in
+				x, y and z direction
+	:type segmentation_mode: str
+	:return: Figure object of the plot (for postprocessing)
 	"""
 
 	if mode == 'average':
@@ -64,29 +71,53 @@ def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all',
 		calc_func = np.sum
 		title_prefix = 'Summed '
 
+	fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
+	if segmentation_mode == 'unsegmented':
+		if isinstance(trajectory, list):
+			mean_ke = [calc_func(frame.loc[:, col_name_ke]) for frame in trajectory]
+			mean_pe = [calc_func(frame.loc[:, col_name_pe]) for frame in trajectory]
+		else:
+			ke = trajectory.loc[:, :, col_name_ke]
+			pe = trajectory.loc[:, :, col_name_pe]
+			mean_ke = calc_func(ke, axis=1)
+			mean_pe = calc_func(pe, axis=1)
 
-	if isinstance(trajectory, list):
-		mean_ke = [calc_func(frame.loc[:, col_name_ke]) for frame in trajectory]
-		mean_pe = [calc_func(frame.loc[:, col_name_pe]) for frame in trajectory]
-	else:
-		ke = trajectory.loc[:, :, col_name_ke]
-		pe = trajectory.loc[:, :, col_name_pe]
-		mean_ke = calc_func(ke, axis=1)
-		mean_pe = calc_func(pe, axis=1)
+		axs[0].plot(mean_pe)
+		axs[1].plot(mean_ke)
+	elif 'center' in segmentation_mode:
+		if segmentation_mode == 'center_x':
+			segmented = la.filter_hemisphere(trajectory, 'x')
+		elif segmentation_mode == 'center_y':
+			segmented = la.filter_hemisphere(trajectory, 'y')
+		elif segmentation_mode == 'center_z':
+			segmented = la.filter_hemisphere(trajectory, 'z')
+		else:
+			raise ValueError('Illegal segmentation mode')
 
-	plt.figure(figsize=(10, 5))
-	plt.subplot(1, 2, 1)
-	plt.plot(mean_pe)
-	plt.title(title_prefix+"Potential Energy")
-	plt.ylabel(title_prefix+"Potential Energy  (kcal/mol)")
-	plt.xlabel("Time Steps")
+		ke_lower_half = [calc_func(frame.loc[:, col_name_ke]) for frame in segmented[0]]
+		ke_upper_half = [calc_func(frame.loc[:, col_name_ke]) for frame in segmented[1]]
 
-	plt.subplot(1, 2, 2)
-	plt.plot(mean_ke)
-	plt.title(title_prefix+"Kinetic Energy")
-	plt.ylabel(title_prefix+"Kinetic Energy  (kcal/mol)")
-	plt.xlabel("Time Steps")
+		pe_lower_half = [calc_func(frame.loc[:, col_name_pe]) for frame in segmented[0]]
+		pe_upper_half = [calc_func(frame.loc[:, col_name_pe]) for frame in segmented[1]]
+
+		axs[0].plot(pe_lower_half, label='lower')
+		axs[0].plot(pe_upper_half, label='upper')
+
+		axs[1].plot(ke_lower_half, label='lower')
+		axs[1].plot(ke_upper_half, label='upper')
+
+		axs[0].legend()
+
+	axs[0].set_title(title_prefix+"Potential Energy")
+	axs[0].set_ylabel(title_prefix+"Potential Energy  (kcal/mol)")
+	axs[0].set_xlabel("Time Steps")
+
+	axs[1].set_title(title_prefix+"Kinetic Energy")
+	axs[1].set_ylabel(title_prefix+"Kinetic Energy  (kcal/mol)")
+	axs[1].set_xlabel("Time Steps")
+
+	return fig
 
 
 def plot_radial_density(trajectories, bins=50, selected_frames='all'):
