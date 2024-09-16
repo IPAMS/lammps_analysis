@@ -117,7 +117,7 @@ def plot_energies_timeseries(trajectory, mode='average', col_name_pe='c_pe_all',
 	axs[1].set_ylabel(title_prefix+"Kinetic Energy  (kcal/mol)")
 	axs[1].set_xlabel("Time Steps")
 
-	return fig
+	return fig, axs
 
 
 def plot_radial_density(trajectories, bins=50, selected_frames='all'):
